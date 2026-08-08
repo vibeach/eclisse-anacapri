@@ -98,7 +98,7 @@ def admin():
     total_people = sum(r["num_people"] or 0 for r in eclisse_rsvps)
     return render_template(
         "admin.html",
-        eclisse_rsvps=[
+        rsvps=[
             {
                 "id": r["id"],
                 "name": r["name"],
@@ -111,7 +111,7 @@ def admin():
             }
             for r in eclisse_rsvps
         ],
-        total_eclisse_rsvps=len(eclisse_rsvps),
+        total_rsvps=len(eclisse_rsvps),
         total_people=total_people,
         admin_key=key,
     )

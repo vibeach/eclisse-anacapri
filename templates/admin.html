@@ -1,0 +1,35 @@
+{% extends "_base.html" %}
+{% block title %}Admin · Eclissi ad Anacapri{% endblock %}
+{% block content %}
+<section class="admin">
+  <div class="admin-inner">
+    <h1>RSVP — dashboard</h1>
+    <p class="stats"><strong>{{ total_rsvps }}</strong> risposte · <strong>{{ total_people }}</strong> persone totali</p>
+    <p><a href="{{ url_for('admin_export', key=admin_key) }}" class="btn small">📥 Esporta CSV</a></p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Nome</th><th>Pax</th><th>Contatto</th><th>Allergie</th><th>Note</th><th>Quando</th><th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in rsvps %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td><strong>{{ r.name }}</strong></td>
+          <td class="num">{{ r.num_people }}</td>
+          <td>{{ r.contact }}</td>
+          <td>{{ r.allergies }}</td>
+          <td>{{ r.notes }}</td>
+          <td class="tiny">{{ r.when }}</td>
+          <td class="tiny">{{ r.ip }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="empty">Ancora nessuna risposta.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

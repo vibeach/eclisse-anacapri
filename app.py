@@ -29,7 +29,7 @@ def init_db():
     id_col = "SERIAL PRIMARY KEY" if IS_PG else "INTEGER PRIMARY KEY AUTOINCREMENT"
     with engine.begin() as c:
         c.execute(text(f"""
-            CREATE TABLE IF NOT EXISTS rsvps (
+            CREATE TABLE IF NOT EXISTS eclisse_rsvps (
                 id {id_col},
                 name TEXT NOT NULL,
                 num_people INTEGER NOT NULL DEFAULT 1,
@@ -70,7 +70,7 @@ def rsvp():
     ip = (request.headers.get("X-Forwarded-For", request.remote_addr) or "").split(",")[0].strip()
     with engine.begin() as c:
         c.execute(
-            text("""INSERT INTO rsvps (name, num_people, allergies, contact, notes, created_at, ip, user_agent)
+            text("""INSERT INTO eclisse_rsvps (name, num_people, allergies, contact, notes, created_at, ip, user_agent)
                     VALUES (:n, :np, :al, :co, :nt, :ca, :ip, :ua)"""),
             {
                 "n": name,
@@ -92,13 +92,13 @@ def admin():
     if key != ADMIN_KEY:
         abort(403)
     with engine.begin() as c:
-        rsvps = list(c.execute(text(
-            "SELECT id, name, num_people, allergies, contact, notes, created_at, ip FROM rsvps ORDER BY created_at DESC"
+        eclisse_rsvps = list(c.execute(text(
+            "SELECT id, name, num_people, allergies, contact, notes, created_at, ip FROM eclisse_rsvps ORDER BY created_at DESC"
         )).mappings())
-    total_people = sum(r["num_people"] or 0 for r in rsvps)
+    total_people = sum(r["num_people"] or 0 for r in eclisse_rsvps)
     return render_template(
         "admin.html",
-        rsvps=[
+        eclisse_rsvps=[
             {
                 "id": r["id"],
                 "name": r["name"],
@@ -109,9 +109,9 @@ def admin():
                 "when": datetime.fromtimestamp(r["created_at"]).strftime("%d/%m %H:%M"),
                 "ip": r["ip"] or "",
             }
-            for r in rsvps
+            for r in eclisse_rsvps
         ],
-        total_rsvps=len(rsvps),
+        total_eclisse_rsvps=len(eclisse_rsvps),
         total_people=total_people,
         admin_key=key,
     )
@@ -124,7 +124,7 @@ def admin_export():
         abort(403)
     with engine.begin() as c:
         rows = list(c.execute(text(
-            "SELECT id, name, num_people, allergies, contact, notes, created_at, ip FROM rsvps ORDER BY created_at DESC"
+            "SELECT id, name, num_people, allergies, contact, notes, created_at, ip FROM eclisse_rsvps ORDER BY created_at DESC"
         )).mappings())
     lines = ["id,name,num_people,allergies,contact,notes,created_at,ip"]
     for r in rows:

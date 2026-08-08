@@ -11,9 +11,9 @@ SECRET_KEY = os.environ.get("ECLISSE_SECRET_KEY", "Nkq-3wR2LmVzTx7A-eclisse-anac
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
 elif DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 if not DATABASE_URL:
     DATABASE_URL = f"sqlite:///{os.path.join(APP_DIR, 'eclisse.db')}"
 

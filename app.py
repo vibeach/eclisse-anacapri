@@ -301,6 +301,16 @@ def admin_export():
     return Response("\n".join(lines), mimetype="text/csv")
 
 
+@app.route("/admin/delete/<int:rsvp_id>", methods=["POST", "GET"])
+def admin_delete(rsvp_id):
+    key = request.args.get("key", "")
+    if key != ADMIN_KEY:
+        abort(403)
+    with engine.begin() as c:
+        c.execute(text("DELETE FROM eclisse_rsvps WHERE id = :id"), {"id": rsvp_id})
+    return redirect(url_for("admin", key=key))
+
+
 @app.route("/healthz")
 def healthz():
     return {"ok": True}

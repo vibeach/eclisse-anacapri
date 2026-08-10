@@ -1,0 +1,97 @@
+{% extends "_base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-image" style="background-image:url('{{ url_for('static', filename='images/hero.jpg') }}');">
+    <div class="hero-overlay">
+      <p class="eyebrow">La notte di San Lorenzo · Villa Anacapri · Gabicce Monte</p>
+      <h1>Eclissi e Stelle Cadenti</h1>
+      <p class="tagline">Ti aspettiamo alle <strong>18:00</strong>.<br>Una cena sotto il cielo che si spegne e si riaccende. Mercoledì <strong>12 agosto</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="story">
+  <div class="story-inner">
+    <p class="intro">
+      In questa notte rarissima due cieli si incontrano: <em>un'eclissi parziale di Sole al 74%</em>
+      che tramonta dietro le colline di Gabicce Monte, e <em>le stelle cadenti di San Lorenzo</em>
+      che salgono a prendersi il buio. In mezzo, noi — a tavola, in terrazza, con orizzonte aperto a Ovest.
+    </p>
+
+    <div class="timeline">
+      <div class="tl-row"><span class="tl-time">18:00</span><span class="tl-text">Arrivo · aperitivo in giardino</span></div>
+      <div class="tl-row"><span class="tl-time">19:30</span><span class="tl-text">Comincia l'eclissi · a tavola</span></div>
+      <div class="tl-row"><span class="tl-time">20:15</span><span class="tl-text">Sole fortemente falcato (~74% coperto) sull'orizzonte</span></div>
+      <div class="tl-row"><span class="tl-time">20:20</span><span class="tl-text">Il Sole eclissato tramonta dietro le colline</span></div>
+      <div class="tl-row"><span class="tl-time">21:00 →</span><span class="tl-text">Cena a buffet · stelle cadenti · notte</span></div>
+    </div>
+
+    <div class="details">
+      <div class="detail-card">
+        <h3>Dove</h3>
+        <p><strong>Villa Anacapri · Via Panoramica 63</strong><br>Gabicce Monte (PU) · terrazza panoramica, orizzonte libero a Ovest sulle colline.</p>
+      </div>
+      <div class="detail-card">
+        <h3>Cosa portare</h3>
+        <p>Solo un maglioncino per dopo il tramonto e la voglia di guardare in alto.<br>Occhiali per eclissi forniti da noi.</p>
+      </div>
+      <div class="detail-card">
+        <h3>Dress code</h3>
+        <p>Estivo elegante · scarpe chiuse (giardino/terrazza).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="images">
+  <div class="img-tile" style="background-image:url('{{ url_for('static', filename='images/eclipse.jpg') }}');"></div>
+  <div class="img-tile" style="background-image:url('{{ url_for('static', filename='images/table.jpg') }}');"></div>
+  <div class="img-tile" style="background-image:url('{{ url_for('static', filename='images/stars.jpg') }}');"></div>
+</section>
+
+<section class="rsvp">
+  <div class="rsvp-inner">
+    <h2>Conferma la tua presenza</h2>
+    <p class="rsvp-sub">Fatelo entro <strong>lunedì 10 agosto</strong> così organizziamo tutto per bene.</p>
+
+    {% if sent %}
+      <div class="notice success">
+        <strong>Grazie, ricevuto!</strong> Ti aggiorno con dettagli e indicazioni sul contatto che hai lasciato.
+      </div>
+    {% endif %}
+    {% if error %}
+      <div class="notice error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('rsvp') }}" class="rsvp-form">
+      <label>
+        <span>Nome e cognome</span>
+        <input type="text" name="name" required maxlength="80" value="{{ form.name if form else '' }}" placeholder="Come ti chiami">
+      </label>
+
+      <label>
+        <span>Quante persone (incluso te)</span>
+        <input type="number" name="num_people" min="1" max="20" required value="{{ form.num_people if form else 1 }}">
+      </label>
+
+      <label>
+        <span>Allergie / intolleranze</span>
+        <textarea name="allergies" rows="2" maxlength="400" placeholder="Es. glutine, lattosio, frutti di mare — o &lsquo;nessuna&rsquo;">{{ form.allergies if form else '' }}</textarea>
+      </label>
+
+      <label>
+        <span>Telefono o email per aggiornamenti *</span>
+        <input type="text" name="contact" required maxlength="200" value="{{ form.contact if form else '' }}" placeholder="+39 333 1234567  oppure  nome@email.com">
+      </label>
+
+      <label>
+        <span>Vuoi aggiungere qualcosa? (opzionale)</span>
+        <textarea name="notes" rows="2" maxlength="600" placeholder="Se porti bimbi, se arrivi in ritardo, se vuoi lasciarci un messaggio">{{ form.notes if form else '' }}</textarea>
+      </label>
+
+      <button type="submit" class="btn">Confermo — ci sarò 🌠</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

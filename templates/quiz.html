@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+{% block content %}
+<section class="game-wrap">
+  <div class="game-card">
+    <p class="eyebrow">Verifica 1 di 2</p>
+    <h1>Domanda facile</h1>
+    <p class="intro-game">Ciao <strong>{{ name }}</strong>! Prima di tutto:</p>
+    <h2 class="game-q">Qual è il soprannome di Ale?</h2>
+
+    <form method="post" action="{{ url_for('verify') }}" class="game-form">
+      <div class="choices">
+        {% for opt in options %}
+          <label class="choice">
+            <input type="radio" name="nickname" value="{{ opt }}" required>
+            <span>{{ opt }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+      <button type="submit" class="btn">Verifica 🌘</button>
+    </form>
+  </div>
+</section>
+<script>
+document.querySelectorAll('.choice input').forEach(el => {
+    el.addEventListener('change', () => {
+        document.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+        el.closest('.choice').classList.add('selected');
+    });
+});
+</script>
+{% endblock %}

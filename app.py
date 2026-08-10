@@ -28,7 +28,7 @@ CORRECT_ANSWER = "Flippi"
 NICKNAME_OPTIONS = ["Supermario", "Flippi", "Batman", "Bomber"]
 
 PAPPO_ROUND_SIZE = 6
-PAPPO_MAX_ERRORS = 3
+PAPPO_MAX_ERRORS = 5
 PAPPO_DIR = os.path.join(APP_DIR, "static", "pappo")
 PAPPO_IMG_DIR = os.path.join(PAPPO_DIR, "img")
 PAPPO_MANIFEST = os.path.join(PAPPO_DIR, "manifest.json")

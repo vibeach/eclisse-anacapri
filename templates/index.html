@@ -2,10 +2,9 @@
 {% block content %}
 <section class="game-wrap">
   <div class="game-card">
-    <p class="eyebrow">Apericena eclissi al tramonto sul mare</p>
-    <h1>Sei sulla lista?</h1>
+    <h1>Eclissi di sole al tramonto sul mare</h1>
     <p class="intro-game">
-      Dimostra di conoscere Ale per accedere ai dettagli.
+      Apericena — dimostra di essere amico di Ale per svelare dettagli.
     </p>
 
     {% if fail %}
@@ -18,7 +17,7 @@
     <form method="post" action="{{ url_for('quiz') }}" class="game-form">
       <label>
         <span>Come ti chiami?</span>
-        <input type="text" name="name" required maxlength="80" autofocus placeholder="Nome e cognome">
+        <input type="text" name="name" required maxlength="80" autofocus placeholder="Nome / soprannome">
       </label>
       <button type="submit" class="btn">Iniziamo 🌒</button>
     </form>

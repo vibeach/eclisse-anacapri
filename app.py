@@ -98,6 +98,35 @@ def init_db():
                 ip TEXT
             )
         """))
+        c.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS eclisse_progress (
+                id {id_col},
+                name TEXT,
+                ip TEXT,
+                stage TEXT NOT NULL,
+                cur INTEGER,
+                total INTEGER,
+                errors INTEGER,
+                created_at BIGINT NOT NULL
+            )
+        """))
+
+
+def _client_ip():
+    return (request.headers.get("X-Forwarded-For", request.remote_addr) or "").split(",")[0].strip()
+
+
+def _track(stage, cur=None, total=None, errors=None):
+    try:
+        with engine.begin() as c:
+            c.execute(
+                text("INSERT INTO eclisse_progress (name, ip, stage, cur, total, errors, created_at) "
+                     "VALUES (:n, :ip, :s, :c, :t, :e, :ts)"),
+                {"n": session.get("name"), "ip": _client_ip(), "s": stage,
+                 "c": cur, "t": total, "e": errors, "ts": int(time.time())},
+            )
+    except Exception:
+        pass
 
 
 # ─── Game flow: / → /quiz → /pappo → /invito ─────────────────────────────────
@@ -116,6 +145,7 @@ def quiz():
         if not name:
             return render_template("index.html", error="Scrivi il tuo nome per continuare.")
         session["name"] = name[:80]
+        _track("quiz")
         return render_template("quiz.html", name=session["name"], options=NICKNAME_OPTIONS)
     if "name" not in session:
         return redirect(url_for("home"))
@@ -136,11 +166,13 @@ def verify():
             {"n": name, "a": answer, "ok": 1 if correct else 0, "t": int(time.time()), "ip": ip},
         )
     if not correct:
+        _track("quiz_wrong")
         return render_template(
             "quiz.html", name=name, options=NICKNAME_OPTIONS,
             error="Risposta sbagliata. Riprova (o chiedi ad Ale)."
         )
     session["verified"] = True
+    _track("quiz_ok")
     return redirect(url_for("pappo"))
 
 
@@ -178,16 +210,25 @@ def pappo():
             session["pappo_idx"] = session.get("pappo_idx", 0) + 1
             if session["pappo_idx"] >= len(session["pappo_queue"]):
                 session["pappo_passed"] = True
+                total = len(session["pappo_queue"])
+                errs = session.get("pappo_errors", 0)
+                _track("passed", cur=total, total=total, errors=errs)
                 session.pop("pappo_queue", None)
                 session.pop("pappo_idx", None)
                 session.pop("pappo_errors", None)
                 return redirect(url_for("invito"))
+            _track("pappo", cur=session["pappo_idx"] + 1, total=len(session["pappo_queue"]),
+                   errors=session.get("pappo_errors", 0))
             return redirect(url_for("pappo"))
         else:
             session["pappo_errors"] = session.get("pappo_errors", 0) + 1
             if session["pappo_errors"] >= PAPPO_MAX_ERRORS:
+                _track("failed", cur=session.get("pappo_idx", 0) + 1,
+                       total=len(session["pappo_queue"]), errors=session["pappo_errors"])
                 session.clear()
                 return redirect(url_for("home") + "?fail=1")
+            _track("pappo", cur=session.get("pappo_idx", 0) + 1,
+                   total=len(session["pappo_queue"]), errors=session["pappo_errors"])
             remaining = PAPPO_MAX_ERRORS - session["pappo_errors"]
             error_msg = f"Guarda meglio e riprova.. hai ancora {remaining} tentativ{'o' if remaining == 1 else 'i'}."
 
@@ -244,6 +285,8 @@ def rsvp():
              "nt": notes or None, "ca": now, "ip": ip,
              "ua": request.headers.get("User-Agent", "")[:200]},
         )
+    session["name"] = name
+    _track("rsvp")
     return redirect(url_for("invito") + "?sent=1")
 
 
@@ -259,6 +302,20 @@ def admin():
         attempts_rows = list(c.execute(text(
             "SELECT name, answer, correct, created_at, ip FROM eclisse_attempts ORDER BY created_at DESC LIMIT 200"
         )).mappings())
+        if IS_PG:
+            progress_rows = list(c.execute(text(
+                "SELECT DISTINCT ON (name, ip) name, ip, stage, cur, total, errors, created_at "
+                "FROM eclisse_progress "
+                "WHERE created_at > :cutoff "
+                "ORDER BY name, ip, created_at DESC"
+            ), {"cutoff": int(time.time()) - 7 * 86400}).mappings())
+        else:
+            progress_rows = list(c.execute(text(
+                "SELECT name, ip, stage, cur, total, errors, created_at FROM eclisse_progress p "
+                "WHERE created_at = (SELECT MAX(created_at) FROM eclisse_progress WHERE name=p.name AND ip=p.ip) "
+                "AND created_at > :cutoff"
+            ), {"cutoff": int(time.time()) - 7 * 86400}).mappings())
+    progress_rows = sorted(progress_rows, key=lambda r: r["created_at"], reverse=True)
     total_people = sum(r["num_people"] or 0 for r in rsvps_rows)
     return render_template(
         "admin.html",
@@ -276,6 +333,13 @@ def admin():
              "when": datetime.fromtimestamp(a["created_at"]).strftime("%d/%m %H:%M"),
              "ip": a["ip"] or ""}
             for a in attempts_rows
+        ],
+        progress=[
+            {"name": p["name"] or "—", "ip": p["ip"] or "",
+             "stage": p["stage"], "cur": p["cur"], "total": p["total"], "errors": p["errors"],
+             "when": datetime.fromtimestamp(p["created_at"]).strftime("%d/%m %H:%M:%S"),
+             "ago": max(0, int(time.time()) - p["created_at"])}
+            for p in progress_rows
         ],
         total_rsvps=len(rsvps_rows),
         total_people=total_people,

@@ -7,6 +7,50 @@
     <p class="stats"><strong>{{ total_rsvps }}</strong> risposte · <strong>{{ total_people }}</strong> persone totali</p>
     <p><a href="{{ url_for('admin_export', key=admin_key) }}" class="btn small">📥 Esporta CSV</a></p>
 
+    <h2 style="margin-top:32px;">🎮 Live — chi sta giocando ora</h2>
+    <p class="tiny">Ultimo stato per persona (ultimi 7 giorni). Auto-refresh 10s.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th><th>Stadio</th><th>Progresso</th><th>Errori</th><th>Ultimo update</th><th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for p in progress %}
+        <tr class="stage-{{ p.stage }}">
+          <td><strong>{{ p.name }}</strong></td>
+          <td>
+            {% if p.stage == 'quiz' %}📝 quiz
+            {% elif p.stage == 'quiz_wrong' %}❌ quiz sbagliato
+            {% elif p.stage == 'quiz_ok' %}✅ quiz superato
+            {% elif p.stage == 'pappo' %}🕵️ pappò
+            {% elif p.stage == 'passed' %}🎉 gioco superato
+            {% elif p.stage == 'failed' %}💥 gioco fallito
+            {% elif p.stage == 'rsvp' %}🌠 RSVP inviata
+            {% else %}{{ p.stage }}
+            {% endif %}
+          </td>
+          <td class="num">
+            {% if p.cur and p.total %}{{ p.cur }} / {{ p.total }}{% else %}—{% endif %}
+          </td>
+          <td class="num">{% if p.errors is not none %}{{ p.errors }}{% else %}—{% endif %}</td>
+          <td class="tiny">
+            {{ p.when }}
+            {% if p.ago < 60 %} · <em>{{ p.ago }}s fa</em>
+            {% elif p.ago < 3600 %} · <em>{{ (p.ago//60) }}m fa</em>
+            {% else %} · <em>{{ (p.ago//3600) }}h fa</em>
+            {% endif %}
+          </td>
+          <td class="tiny">{{ p.ip }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="empty">Nessuno ha ancora aperto il gioco.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <h2 style="margin-top:32px;">📋 RSVP confermati</h2>
+
     <table>
       <thead>
         <tr>
@@ -32,4 +76,8 @@
     </table>
   </div>
 </section>
+<script>
+  // Auto-refresh live progress every 10s
+  setTimeout(() => location.reload(), 10000);
+</script>
 {% endblock %}
